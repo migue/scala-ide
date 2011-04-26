@@ -2,6 +2,7 @@
 <?eclipse version="3.2"?>
 <plugin>
    <extension-point id="reconciliationParticipants" name="Reconcilation Participants" schema="schema/reconciliationParticipants.exsd"/>
+   <extension-point id="scalaCodeAnalysis" name="Scala Code Analysis" schema="schema/scalaCodeAnalysis.exsd"/>
    <extension
          point="org.eclipse.ui.propertyPages">
       <page
@@ -88,9 +89,14 @@
             class="scala.tools.eclipse.properties.ImplicitsPreferencePage"
             id="org.scala-ide.sdt.core.properties.Implicits"
             name="Implicits">
-      </page>      
+      </page>
+      <page
+            category="org.scala-ide.sdt.core.preferences"
+            class="scala.tools.eclipse.properties.CodeAnalysisPreferences"
+            name="Code Analysis"
+            id="org.scala-ide.sdt.core.codeanalysispreferences"/>
+      </page>
    </extension>
-
 
   <extension point="org.eclipse.core.contenttype.contentTypes">
     <content-type id="scala.tools.eclipse.scalaSource" name="Scala Source File"
@@ -1184,6 +1190,7 @@
     </javaCompletionProposalComputer>
  </extension>
  <extension
+<<<<<<< HEAD
        id="scala.tools.eclipse.consoleView"
        point="org.eclipse.ui.views">
     <view
@@ -1223,5 +1230,28 @@
           id="org.scala-ide.sdt.core.SemanticHighlightingPresenter"
           name="Semantic Highlighting">
     </participant>
+ </extension>
+ <extension
+       id="scalaCodeAnalysisProblem"
+       name="Scala Code Analysis"
+       point="org.eclipse.core.resources.markers">
+    <super
+          type="org.eclipse.core.resources.problemmarker">
+    </super>
+    <persistent
+          value="false">
+    </persistent>
+ </extension>
+ <extension
+       point="org.scala-ide.sdt.core.scalaCodeAnalysis">
+    <analyzer
+          class="scala.tools.eclipse.codeanalysis.impls.UnusedImports"
+          id="org.scala-ide.sdt.core.codeanalysis.unusedimports"
+          name="Unused Imports">
+       <marker
+             id="org.scala-ide.sdt.core.scalaCodeAnalysisProblem"
+             severity="1">
+       </marker>
+    </analyzer>
  </extension>
 </plugin>

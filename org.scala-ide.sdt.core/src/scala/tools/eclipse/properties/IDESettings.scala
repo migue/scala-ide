@@ -37,6 +37,13 @@ object IDESettings {
   
   def buildManagerSettings: List[Box] =
     List(Box("Build manager", List(buildManager, compileOrder)))
+
+  def codeAnalysisSettings: List[Box] = {
+    List(Box("Scala Code Analysis", List(codeAnalysis)))
+
+  def codeAnalysisSettings: List[Box] = {
+    List(Box("Scala Code Analysis", List(codeAnalysis)))
+  }
 }
 
 object ScalaPluginSettings extends Settings {
@@ -44,4 +51,5 @@ object ScalaPluginSettings extends Settings {
   val buildManager = ChoiceSetting("-buildmanager", "which", "Build manager to use", List("refined", "sbt"), "sbt")
   val compileOrder = ChoiceSetting("-compileorder", "which", "Compilation order",
       List("Mixed", "JavaThenScala", "ScalaThenJava"), "Mixed")
+  val codeAnalysis = BooleanSetting("-codeanalysis", "Enable additional code analysis during compilation.")
 }
