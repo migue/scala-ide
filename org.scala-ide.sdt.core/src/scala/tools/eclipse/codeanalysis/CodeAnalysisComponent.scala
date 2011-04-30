@@ -5,7 +5,7 @@
 package scala.tools.eclipse
 package codeanalysis
 
-import org.eclipse.core.resources.IFile
+import org.eclipse.core.resources.{IFile, IProject}
 import scala.tools.nsc.io.AbstractFile
 import scala.tools.nsc.{SubComponent, Phase}
 import util.EclipseResource

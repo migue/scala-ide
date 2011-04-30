@@ -71,14 +71,11 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
     override def computeInternalPhases() {
       super.computeInternalPhases
 
-      if(codeanalysis.CodeAnalysisExtensionPoint.isEnabled) {
-
-        val codeAnalysis = new codeanalysis.CodeAnalysisComponent {
-          val global: EclipseBuildCompiler.this.type = EclipseBuildCompiler.this
-        }
-
-        addToPhasesSet(codeAnalysis, "code analysis hook for the IDE")
+      val codeAnalysis = new codeanalysis.CodeAnalysisComponent {
+        val global: EclipseBuildCompiler.this.type = EclipseBuildCompiler.this
       }
+
+      addToPhasesSet(codeAnalysis, "code analysis hook for the IDE")
     }
   }
 

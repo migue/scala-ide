@@ -23,7 +23,9 @@ object CodeAnalysisExtensionPoint {
   trait CompilationUnit {
     val global: Global
     val unit: global.CompilationUnit
-  }  
+  }
+  
+  case class ExtensionPointDescription(id: String, name: String, markerId: String, severity: Int)
     
   def apply(file: IFile, cu: CompilationUnit) = {
     
@@ -31,16 +33,22 @@ object CodeAnalysisExtensionPoint {
     
     deleteMarkers(file)
 
-    collectExtensions map {
-      case (markerType, severity, extension) =>
-        extension.analyze(cu) foreach {
-          case extension.Marker(msg, line) => 
-            addMarker(file, markerType, msg, line, severity)
+    extensions map {
+      case (ExtensionPointDescription(id, _, markerType, _), extension) =>
+        
+        if(CodeAnalysisPreferences.isEnabledForProject(file.getProject, id)) {
+        
+          lazy val severity = CodeAnalysisPreferences.getSeverityForProject(file.getProject, id)
+          
+          extension.analyze(cu) foreach {
+            case extension.Marker(msg, line) => 
+              addMarker(file, markerType, msg, line, severity)
+          }
         }
     }
   }
     
-  def collectExtensions: List[(String, Int, CodeAnalysisExtension)] = {
+  lazy val extensions: List[(ExtensionPointDescription, CodeAnalysisExtension)] = {
     
     val configs = Platform.getExtensionRegistry.getConfigurationElementsFor(PARTICIPANTS_ID).toList
 
@@ -61,8 +69,12 @@ object CodeAnalysisExtensionPoint {
           (MARKER_TYPE, IMarker.SEVERITY_WARNING)
       }
       
+      val analyzerName = e.getAttribute("name")
+      val analyzerId   = e.getAttribute("id")
+      
       catching(classOf[CoreException]) opt e.createExecutableExtension("class") collect {
-        case instance: CodeAnalysisExtension => (markerType, severity, instance)
+        case instance: CodeAnalysisExtension => 
+          (ExtensionPointDescription(analyzerId, analyzerName, markerType, severity), instance)
       }
     }
   }
