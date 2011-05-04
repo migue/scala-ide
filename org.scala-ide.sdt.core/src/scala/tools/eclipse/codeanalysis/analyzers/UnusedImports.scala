@@ -3,7 +3,7 @@
  */
 
 package scala.tools.eclipse
-package codeanalysis.impls
+package codeanalysis.analyzers
 
 import codeanalysis.{CodeAnalysisExtension, CodeAnalysisExtensionPoint}
 import scala.tools.nsc.io.AbstractFile

@@ -28,17 +28,15 @@ object CodeAnalysisExtensionPoint {
   case class ExtensionPointDescription(id: String, name: String, markerId: String, severity: Int)
     
   def apply(file: IFile, cu: CompilationUnit) = {
-    
-    println("running code analysis")
-    
+        
     deleteMarkers(file)
 
     extensions map {
-      case (ExtensionPointDescription(id, _, markerType, _), extension) =>
+      case (ExtensionPointDescription(analyzerId, _, markerType, _), extension) =>
         
-        if(CodeAnalysisPreferences.isEnabledForProject(file.getProject, id)) {
-        
-          lazy val severity = CodeAnalysisPreferences.getSeverityForProject(file.getProject, id)
+        if(CodeAnalysisPreferences.isEnabledForProject(file.getProject, analyzerId)) {
+                  
+          lazy val severity = CodeAnalysisPreferences.getSeverityForProject(file.getProject, analyzerId)
           
           extension.analyze(cu) foreach {
             case extension.Marker(msg, line) => 
@@ -84,7 +82,7 @@ object CodeAnalysisExtensionPoint {
   }
     
   private def deleteMarkers(file: IFile) {
-    file.deleteMarkers(MARKER_TYPE, false, IResource.DEPTH_ZERO)
+    file.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_ZERO)
   }
   
   private def addMarker(file: IFile, markerType: String, message: String, lineNumber: Int, severity: Int) {

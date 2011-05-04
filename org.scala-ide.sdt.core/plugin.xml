@@ -1244,19 +1244,46 @@
           type="org.eclipse.core.resources.problemmarker">
     </super>
     <persistent
-          value="false">
+          value="true">
     </persistent>
  </extension>
  <extension
        point="org.scala-ide.sdt.core.scalaCodeAnalysis">
     <analyzer
-          class="scala.tools.eclipse.codeanalysis.impls.UnusedImports"
+          class="scala.tools.eclipse.codeanalysis.analyzers.UnusedImports"
           id="org.scala-ide.sdt.core.codeanalysis.unusedimports"
           name="Unused Imports">
+    </analyzer>
+ </extension>
+ <extension
+       point="org.scala-ide.sdt.core.scalaCodeAnalysis">
+    <analyzer
+          class="scala.tools.eclipse.codeanalysis.analyzers.UnnecessaryPatternMatches"
+          id="org.scala-ide.sdt.core.codeanalysis.UnnecessaryPatternMatches"
+          name="Unnecessary Pattern Match">
        <marker
-             id="org.scala-ide.sdt.core.scalaCodeAnalysisProblem"
-             severity="1">
+             id="org.scala-ide.sdt.core.unnecessaryPatternMatch"
+             severity="0">
        </marker>
     </analyzer>
+ </extension>
+ <extension
+       point="org.eclipse.jdt.ui.quickFixProcessors">
+    <quickFixProcessor
+          class="scala.tools.eclipse.codeanalysis.quickfixes.QuickFixProcessor"
+          id="org.scala-ide.sdt.core.quickFixProcessor1">
+       <handledMarkerTypes>
+          <markerType
+                id="org.scala-ide.sdt.core.unnecessaryPatternMatch">
+          </markerType>
+       </handledMarkerTypes>
+    </quickFixProcessor>
+ </extension>
+ <extension
+       id="unnecessaryPatternMatch"
+       point="org.eclipse.core.resources.markers">
+    <super
+          type="org.scala-ide.sdt.core.scalaCodeAnalysisProblem">
+    </super>
  </extension>
 </plugin>

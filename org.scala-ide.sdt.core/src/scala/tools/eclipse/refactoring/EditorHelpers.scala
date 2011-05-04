@@ -13,21 +13,22 @@ import scala.tools.nsc.io.AbstractFile
 import org.eclipse.jface.text.IDocument
 import org.eclipse.text.edits.ReplaceEdit
 import org.eclipse.text.edits.MultiTextEdit
-import org.eclipse.ltk.core.refactoring.TextFileChange
-import org.eclipse.ui.PlatformUI
-import org.eclipse.ui.IWorkbenchWindow
-import org.eclipse.ui.IWorkbenchPage
-import org.eclipse.ui.IEditorPart
-import org.eclipse.ui.texteditor.ITextEditor
-import org.eclipse.ui.IFileEditorInput
+import org.eclipse.jface.text.IRegion
 import org.eclipse.core.resources.IFile
-import scala.tools.eclipse.ScalaSourceFileEditor
-import org.eclipse.jface.text.ITextSelection
+import org.eclipse.jface.text.{ITextSelection, IDocument}
+import org.eclipse.ltk.core.refactoring.TextFileChange
+import org.eclipse.text.edits.{MultiTextEdit, ReplaceEdit, RangeMarker}
+import org.eclipse.ui.texteditor.ITextEditor
+import org.eclipse.ui.{IFileEditorInput, IEditorPart, IWorkbenchPage, IWorkbenchWindow, PlatformUI}
 import scala.tools.eclipse.javaelements.ScalaSourceFile
 import org.eclipse.jface.text.link.LinkedModeModel
 import org.eclipse.jface.text.link.LinkedPositionGroup
 import org.eclipse.jface.text.link.LinkedPosition
 import org.eclipse.jface.text.link.LinkedModeUI
+import scala.tools.eclipse.ScalaSourceFileEditor
+import scala.tools.nsc.io.AbstractFile
+import scala.tools.refactoring.common.Change
+import util.FileUtils
 
 object EditorHelpers {
    
@@ -45,6 +46,12 @@ object EditorHelpers {
     }
   }
   
+  /**
+   * Runs a function with the ScalaSourceFileEditor of the currently active editor.
+   * 
+   * @param block A function that is called with the ScalaSourceFileEditor.
+   * @return None when the current editor of the ScalaSourceFile cannot be found or is not a ScalaSourceFileEditor. Otherwise the result of applying block.
+   */ 
   def withCurrentEditor[T](block: ScalaSourceFileEditor => Option[T]): Option[T] = { 
     activeWorkbenchWindow flatMap { 
       activePage(_)         flatMap {
@@ -55,14 +62,27 @@ object EditorHelpers {
     }
   }
   
+  /**
+   * Runs a function with the ScalaSourceFile of the currently active editor.
+   * 
+   * @param block A function that is called with the ScalaSourceFile.
+   * @return None when the current editor of the ScalaSourceFile cannot be found. Otherwise the result of applying block.
+   */ 
   def withCurrentScalaSourceFile[T](block: ScalaSourceFile => T): Option[T] = {
     withCurrentEditor { textEditor =>
-      file(textEditor)      flatMap { file =>
+      file(textEditor) flatMap { file =>
         ScalaSourceFile.createFromPath(file.getFullPath.toString) map block
       }
     }
   }
   
+  /**
+   * Runs a function with the ScalaSourceFile and the selection (or simply the caret position) 
+   * of the currently active editor.
+   * 
+   * @param block A function that is called with the ScalaSourceFile and the selection.
+   * @return None when the current editor of the ScalaSourceFile cannot be found. Otherwise the result of applying block.
+   */
   def withScalaFileAndSelection[T](block: (ScalaSourceFile, ITextSelection) => Option[T]): Option[T] = {
     withCurrentEditor { textEditor =>
       file(textEditor) flatMap { file =>
@@ -75,6 +95,13 @@ object EditorHelpers {
     }
   }
   
+  /**
+   * Turns a list of changes from the refactoring library to proper Eclipse ReplaceEdit 
+   * and wraps them in a single TextFileChange.
+   * 
+   * @param file The IFile to create a TextFileChange for.
+   * @param fileChanges The changes the refactoring library generated.
+   */
   def createTextFileChange(file: IFile, fileChanges: List[scala.tools.refactoring.common.Change]): TextFileChange = {
     new TextFileChange(file.getName(), file) {
             
