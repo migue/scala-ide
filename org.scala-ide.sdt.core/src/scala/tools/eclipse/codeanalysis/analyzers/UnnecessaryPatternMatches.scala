@@ -12,7 +12,7 @@ import tools.refactoring.implementations.EliminateMatch
 class UnnecessaryPatternMatches extends CodeAnalysisExtension {
   
   def analyze(param: CodeAnalysisExtensionPoint.CompilationUnit) = {
-    val unusedImportsFinder = new EliminateMatch with tools.refactoring.common.TreeTraverser with tools.refactoring.common.CompilerAccess {
+    val analyzer = new EliminateMatch with tools.refactoring.common.TreeTraverser with tools.refactoring.common.CompilerAccess {
       
       def compilationUnitOfFile(f: AbstractFile): Option[param.global.CompilationUnit] = {
         if(f == param.unit.source.file) Some(param.unit) else None
@@ -47,10 +47,10 @@ class UnnecessaryPatternMatches extends CodeAnalysisExtension {
       }
     }
     
-    unusedImportsFinder.findMatchesToEliminate() map {
+    analyzer.findMatchesToEliminate() map {
       case (kind, line) =>
         println(kind)
-        Marker("Pattern Match Could Be Replaced By Call To `"+ kind +"`", line)
+        Marker("Replace pattern match by call to `"+ kind +"`", line)
     }
   }
 }
