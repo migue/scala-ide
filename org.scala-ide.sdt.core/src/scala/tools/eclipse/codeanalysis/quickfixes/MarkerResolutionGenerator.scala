@@ -1,6 +1,7 @@
 package scala.tools.eclipse
 package codeanalysis.quickfixes
 
+import org.eclipse.ui.texteditor.AbstractMarkerAnnotationModel
 import org.eclipse.jdt.internal.ui.JavaPluginImages
 import org.eclipse.core.runtime.NullProgressMonitor
 import scala.tools.refactoring.common.Change
@@ -14,6 +15,25 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.ui.IMarkerResolution;
 import org.eclipse.ui.IMarkerResolutionGenerator;
 import tools.refactoring.common.InteractiveScalaCompiler
+
+object MarkerUtil {
+  
+  def getLineNumberFromMarker(marker: IMarker) = {
+    EditorHelpers.withCurrentEditor { editor =>
+      Option(editor.getDocumentProvider) flatMap { documentProvider =>
+        documentProvider.getAnnotationModel(editor.getEditorInput) match {
+          case model: AbstractMarkerAnnotationModel =>
+            Option(model.getMarkerPosition(marker)) filterNot (_.isDeleted) flatMap { pos =>
+              Option(documentProvider.getDocument(editor.getEditorInput)) map (_.getLineOfOffset(pos.getOffset) + 1)
+            }
+          case _ => None
+        }
+      }
+    } getOrElse {
+      marker.getAttribute(IMarker.LINE_NUMBER)
+    }
+  }
+}
 
 class MarkerResolutionGenerator extends IMarkerResolutionGenerator {
 
@@ -31,12 +51,10 @@ class MarkerResolutionGenerator extends IMarkerResolutionGenerator {
           
             val r = new EliminateMatch with InteractiveScalaCompiler { val global = compiler }
             
-            val selection = marker.getAttribute(IMarker.LINE_NUMBER) match {
+            val selection = MarkerUtil.getLineNumberFromMarker(marker) match {
               case line: Integer =>
                 val start = sourceFile.lineToOffset(line)
                 val end = sourceFile.lineToOffset(line + 1) - 1 /*without any kind of newline*/
-                println("start: "+ start)
-                println("end: "+ end)
                 new r.FileSelection(sourceFile.file, r.global.body(sourceFile), start, end)
               case _ => throw new Exception("Could not get line number from marker, please file a bug report")
             }
