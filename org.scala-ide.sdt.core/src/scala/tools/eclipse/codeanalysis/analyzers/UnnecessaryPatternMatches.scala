@@ -42,14 +42,12 @@ class UnnecessaryPatternMatches extends CodeAnalysisExtension {
         }
         
         traverser.traverse(param.unit.body)
-        println("found "+ hits.size)
         hits.toList
       }
     }
     
     analyzer.findMatchesToEliminate() map {
       case (kind, line) =>
-        println(kind)
         Marker("Replace pattern match by call to `"+ kind +"`", line)
     }
   }

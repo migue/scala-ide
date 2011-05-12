@@ -1254,6 +1254,15 @@
           id="org.scala-ide.sdt.core.codeanalysis.unusedimports"
           name="Unused Imports">
     </analyzer>
+    <analyzer
+          class="scala.tools.eclipse.codeanalysis.analyzers.PrintlnStatement"
+          id="org.scala-ide.sdt.core.codeanalysis.println"
+          name="Println Statement">
+       <marker
+             id="org.scala-ide.sdt.core.scalaCodeAnalysisProblem"
+             severity="2">
+       </marker>
+    </analyzer>
  </extension>
  <extension
        point="org.scala-ide.sdt.core.scalaCodeAnalysis">
