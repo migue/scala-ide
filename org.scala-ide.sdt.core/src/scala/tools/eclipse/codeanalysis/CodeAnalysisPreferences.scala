@@ -32,7 +32,4 @@ object CodeAnalysisPreferences {
     val prefStore = if (useProjectSettings) projectStore else ScalaPlugin.plugin.getPreferenceStore
     prefStore
   }
-  
-  
-  
 }

@@ -12,7 +12,6 @@ import scala.tools.nsc.reporters.Reporter
 import scala.tools.eclipse.util.{ EclipseResource, FileUtils }
 import org.eclipse.core.runtime.{ SubMonitor, IPath, Path }
 import scala.tools.eclipse.util.HasLogger
-import scala.tools.eclipse.util.ScalaPluginSettings
 
 class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
   extends RefinedBuildManager(settings0) with EclipseBuildManager with HasLogger {

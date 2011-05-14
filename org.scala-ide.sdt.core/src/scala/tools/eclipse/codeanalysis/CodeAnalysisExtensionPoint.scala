@@ -5,7 +5,6 @@
 package scala.tools.eclipse.codeanalysis
 
 import scala.tools.eclipse.SettingConverterUtil
-import scala.tools.eclipse.util.ScalaPluginSettings
 import org.eclipse.core.runtime.{CoreException, Platform}
 import scala.tools.eclipse.ScalaPlugin
 import scala.tools.nsc.Global
@@ -13,6 +12,7 @@ import org.eclipse.core.resources.IFile
 import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IMarker
 import scala.util.control.Exception._
+import scala.tools.eclipse.properties.ScalaPluginSettings
 
 object CodeAnalysisExtensionPoint {
   

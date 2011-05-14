@@ -2,7 +2,6 @@ package scala.tools.eclipse.quickfix
 
 import org.eclipse.core.commands.{ AbstractHandler, ExecutionEvent }
 import org.eclipse.jface.action.{ Action, AbstractAction, IAction }
-import org.eclipse.jface.util.IPropertyChangeListener
 import scala.tools.eclipse.refactoring.ActionAdapter
 
 /**

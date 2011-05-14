@@ -38,12 +38,8 @@ object IDESettings {
   def buildManagerSettings: List[Box] =
     List(Box("Build manager", List(buildManager, compileOrder)))
 
-  def codeAnalysisSettings: List[Box] = {
+  def codeAnalysisSettings: List[Box] =
     List(Box("Scala Code Analysis", List(codeAnalysis)))
-
-  def codeAnalysisSettings: List[Box] = {
-    List(Box("Scala Code Analysis", List(codeAnalysis)))
-  }
 }
 
 object ScalaPluginSettings extends Settings {

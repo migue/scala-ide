@@ -5,11 +5,14 @@
 package scala.tools.eclipse
 package codeanalysis
 
-import org.eclipse.core.resources.{IFile, IProject}
-import scala.tools.nsc.io.AbstractFile
+import org.eclipse.core.resources.IFile
 import scala.tools.nsc.{SubComponent, Phase}
 import util.EclipseResource
 
+/**
+ * A compiler plugin that calls the CodeAnalysisExtensionPoint
+ * as soon as a compilation unit has been typechecked.
+ */
 trait CodeAnalysisComponent extends SubComponent {
   
   val runsAfter = List("typer")
@@ -38,7 +41,7 @@ trait CodeAnalysisComponent extends SubComponent {
           CodeAnalysisExtensionPoint(file, cu)
          
         case _ =>
-          println("no IFile found "+ compilationUnit.source.file.name)
+          println("ScalaCodeAnalysis: no IFile found for "+ compilationUnit.source.file.name)
       }
     }
   }

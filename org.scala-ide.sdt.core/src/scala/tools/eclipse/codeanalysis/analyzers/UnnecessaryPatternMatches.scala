@@ -22,8 +22,6 @@ class UnnecessaryPatternMatches extends CodeAnalysisExtension {
       
       def findMatchesToEliminate() = {
         
-        println("findMatchesToEliminate")
-        
         val hits = new collection.mutable.ListBuffer[(String, Int)]
         
         val traverser = new global.Traverser {

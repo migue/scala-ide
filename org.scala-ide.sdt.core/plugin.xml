@@ -41,6 +41,7 @@
             class="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
             id="scala.tools.eclipse.properties.OrganizeImportsPreferencesPage"
             name="Scala Organize Imports">
+      </page>
       <page
             class="scala.tools.eclipse.codeanalysis.CodeAnalysisPreferencePage"
             id="scala.tools.eclipse.codeanalysis.CodeAnalysisPropertyPage"
@@ -1260,13 +1261,10 @@
           name="Println Statement">
        <marker
              id="org.scala-ide.sdt.core.scalaCodeAnalysisProblem"
-             severity="2">
+             severity="0">
        </marker>
     </analyzer>
- </extension>
- <extension
-       point="org.scala-ide.sdt.core.scalaCodeAnalysis">
-    <analyzer
+        <analyzer
           class="scala.tools.eclipse.codeanalysis.analyzers.UnnecessaryPatternMatches"
           id="org.scala-ide.sdt.core.codeanalysis.UnnecessaryPatternMatches"
           name="Unnecessary Pattern Match">
@@ -1289,7 +1287,7 @@
  <extension
        point="org.eclipse.ui.ide.markerResolution">
     <markerResolutionGenerator
-          class="scala.tools.eclipse.codeanalysis.quickfixes.MarkerResolutionGenerator"
+          class="scala.tools.eclipse.codeanalysis.quickfixes.UnnecessaryPatternMatchMarkerResolutionGenerator"
           markerType="org.scala-ide.sdt.core.unnecessaryPatternMatch">
     </markerResolutionGenerator>
  </extension>

@@ -1,41 +1,22 @@
+/*
+ * Copyright 2011 LAMP/EPFL
+ */
+
 package scala.tools.eclipse
 package codeanalysis.quickfixes
 
-import org.eclipse.ui.texteditor.AbstractMarkerAnnotationModel
-import org.eclipse.jdt.internal.ui.JavaPluginImages
+import org.eclipse.core.resources.{IMarker, IFile}
 import org.eclipse.core.runtime.NullProgressMonitor
-import scala.tools.refactoring.common.Change
-import javaelements.ScalaSourceFile
-import org.eclipse.core.resources.IFile
-import util.EclipseFile
-import scala.tools.refactoring.implementations.EliminateMatch
+import org.eclipse.jdt.internal.ui.JavaPluginImages
+import org.eclipse.ui.{IMarkerResolutionGenerator, IMarkerResolution2}
+
 import scala.tools.eclipse.refactoring.EditorHelpers
-import org.eclipse.ui.IMarkerResolution2
-import org.eclipse.core.resources.IMarker;
-import org.eclipse.ui.IMarkerResolution;
-import org.eclipse.ui.IMarkerResolutionGenerator;
-import tools.refactoring.common.InteractiveScalaCompiler
+import scala.tools.refactoring.common.InteractiveScalaCompiler
+import scala.tools.refactoring.implementations.EliminateMatch
 
-object MarkerUtil {
-  
-  def getLineNumberFromMarker(marker: IMarker) = {
-    EditorHelpers.withCurrentEditor { editor =>
-      Option(editor.getDocumentProvider) flatMap { documentProvider =>
-        documentProvider.getAnnotationModel(editor.getEditorInput) match {
-          case model: AbstractMarkerAnnotationModel =>
-            Option(model.getMarkerPosition(marker)) filterNot (_.isDeleted) flatMap { pos =>
-              Option(documentProvider.getDocument(editor.getEditorInput)) map (_.getLineOfOffset(pos.getOffset) + 1)
-            }
-          case _ => None
-        }
-      }
-    } getOrElse {
-      marker.getAttribute(IMarker.LINE_NUMBER)
-    }
-  }
-}
+import javaelements.ScalaSourceFile
 
-class MarkerResolutionGenerator extends IMarkerResolutionGenerator {
+class UnnecessaryPatternMatchMarkerResolutionGenerator extends IMarkerResolutionGenerator {
 
   def getResolutions(marker: IMarker) = {
     
