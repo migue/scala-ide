@@ -8,7 +8,7 @@ package scala.tools.eclipse.javaelements
 import scala.collection.immutable.Seq
 import scala.reflect.NameTransformer
 
-import org.eclipse.jdt.core.{ IField, IJavaElement, IMember, IMethod, IType, ITypeParameter }
+import org.eclipse.jdt.core.{ IField, IJavaElement, IMember, IMethod, IType, ITypeParameter, Flags }
 import org.eclipse.jdt.internal.compiler.classfmt.ClassFileConstants
 import org.eclipse.jdt.internal.core.{
   BinaryType, JavaElement, JavaElementInfo, LocalVariable, SourceConstructorInfo, SourceField, SourceFieldElementInfo,
@@ -148,12 +148,13 @@ class ScalaTypeElement(parent : JavaElement, name : String, display : String)
   override def getImageDescriptor = ScalaImages.SCALA_TYPE
 } 
 
+//@Todo: Remove default parameters for flags and methodParameter emolitor@
 class ScalaLocalVariableElement(
   parent : JavaElement, name : String,
   declarationSourceStart : Int, declarationSourceEnd : Int, nameStart : Int, nameEnd : Int,
-  typeSignature : String,
-  display : String) extends LocalVariable(
-  parent, name, declarationSourceStart, declarationSourceEnd, nameStart, nameEnd, typeSignature, null, 0, false) with
+  typeSignature : String, display : String, flags : Int = Flags.AccDefault, 
+  methodParameter : Boolean = false) extends LocalVariable(
+  parent, name, declarationSourceStart, declarationSourceEnd, nameStart, nameEnd, typeSignature, null, flags, methodParameter) with
   ScalaElement {
   override def getLabelText(flags : Long) = display
 }
