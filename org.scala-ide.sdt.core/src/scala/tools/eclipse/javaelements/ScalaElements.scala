@@ -153,7 +153,7 @@ class ScalaLocalVariableElement(
   declarationSourceStart : Int, declarationSourceEnd : Int, nameStart : Int, nameEnd : Int,
   typeSignature : String,
   display : String) extends LocalVariable(
-  parent, name, declarationSourceStart, declarationSourceEnd, nameStart, nameEnd, typeSignature, null) with
+  parent, name, declarationSourceStart, declarationSourceEnd, nameStart, nameEnd, typeSignature, null, 0, false) with
   ScalaElement {
   override def getLabelText(flags : Long) = display
 }
