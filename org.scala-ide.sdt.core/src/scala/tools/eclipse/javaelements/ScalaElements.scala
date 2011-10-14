@@ -148,13 +148,11 @@ class ScalaTypeElement(parent : JavaElement, name : String, display : String)
   override def getImageDescriptor = ScalaImages.SCALA_TYPE
 } 
 
-//@Todo: Remove default parameters for flags and methodParameter emolitor@
 class ScalaLocalVariableElement(
   parent : JavaElement, name : String,
   declarationSourceStart : Int, declarationSourceEnd : Int, nameStart : Int, nameEnd : Int,
-  typeSignature : String, display : String, flags : Int = Flags.AccDefault, 
-  methodParameter : Boolean = false) extends LocalVariable(
-  parent, name, declarationSourceStart, declarationSourceEnd, nameStart, nameEnd, typeSignature, null, flags, methodParameter) with
+  typeSignature : String, display : String, jdtFlags : Int, methodParameter : Boolean ) extends LocalVariable(
+  parent, name, declarationSourceStart, declarationSourceEnd, nameStart, nameEnd, typeSignature, null, jdtFlags, methodParameter) with
   ScalaElement {
   override def getLabelText(flags : Long) = display
 }
