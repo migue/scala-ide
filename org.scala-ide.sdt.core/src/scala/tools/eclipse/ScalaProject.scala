@@ -274,8 +274,12 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
 
     var sourceFiles = new immutable.HashSet[IFile]
     
-    for (srcEntry <- javaProject.getResolvedClasspath(true) if srcEntry.getEntryKind() == IClasspathEntry.CPE_SOURCE) {
-      val srcFolder = ScalaPlugin.plugin.workspaceRoot.findMember(srcEntry.getPath())
+    for {
+      srcEntry <- javaProject.getResolvedClasspath(true)
+      if srcEntry.getEntryKind() == IClasspathEntry.CPE_SOURCE
+      val srcFolder = ScalaPlugin.plugin.workspaceRoot.findMember(srcEntry.getPath()) 
+      if srcFolder ne null
+    } {
       val inclusionPatterns = fullPatternChars(srcEntry, srcEntry.getInclusionPatterns())
       val exclusionPatterns = fullPatternChars(srcEntry, srcEntry.getExclusionPatterns())
       val isAlsoProject = srcFolder == underlying  // source folder is the project itself
@@ -363,6 +367,7 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
     // the classpath change notification
     val markerJob= new Job("Update classpath error marker") {
       override def run(monitor: IProgressMonitor): IStatus = {
+        if (underlying.isOpen()) { // cannot change markers on closed project
           // clean the markers
           underlying.deleteMarkers(plugin.problemMarkerId, false, IResource.DEPTH_ZERO)
           
@@ -374,7 +379,8 @@ class ScalaProject(val underlying: IProject) extends HasLogger {
               marker.setAttribute(IMarker.SEVERITY, severity)
             case _ =>
           }
-          Status.OK_STATUS
+        }
+        Status.OK_STATUS
       }
     }
     markerJob.setRule(underlying)
