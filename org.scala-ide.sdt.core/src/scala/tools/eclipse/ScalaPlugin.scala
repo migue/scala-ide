@@ -29,6 +29,7 @@ import scala.tools.eclipse.templates.ScalaTemplateManager
 import org.eclipse.jdt.ui.PreferenceConstants
 import org.eclipse.core.resources.IResourceDelta
 import scala.tools.eclipse.util.HasLogger
+import org.osgi.framework.Bundle
 
 object ScalaPlugin {
   var plugin: ScalaPlugin = _
@@ -84,7 +85,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   val javaFileExtn = ".java"
   val jarFileExtn = ".jar"
 
-  def cutVersion(version: String): String = {
+  private def cutVersion(version: String): String = {
           val pattern = "(\\d)\\.(\\d+)\\..*".r
           version match {
             case pattern(major, minor)=>
@@ -93,6 +94,20 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
               "(unknown)"
           }
       }
+  
+  /**
+   * Check if the given version is compatible with the current plug-in version.
+   * Check on the major/minor number, discard the maintenance number.
+   * 2.9.1 and 2.9.2-SNAPSHOT are compatible
+   * 2.8.1 and 2.9.0 are no compatible
+   */
+  def isCompatibleVersion(version: Option[String]): Boolean =
+    version match {
+    case Some(v) =>
+      cutVersion(v) == shortScalaVer
+    case None =>
+      false
+  }
 
   lazy val scalaVer = scala.util.Properties.scalaPropOrElse("version.number", "(unknown)")
   lazy val shortScalaVer = cutVersion(scalaVer)
@@ -110,7 +125,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
   //lazy val sbtScalaCompiler = pathInBundle(sbtCompilerBundle, "/lib/scala-" + shortScalaVer + "/lib/scala-compiler.jar")
   
   val scalaLibBundle = {
-    val bundles = Platform.getBundles(ScalaPlugin.plugin.libraryPluginId, scalaCompilerBundleVersion.toString())
+    val bundles = Option(Platform.getBundles(ScalaPlugin.plugin.libraryPluginId, scalaCompilerBundleVersion.toString())).getOrElse(Array[Bundle]())
     logger.debug("[scalaLibBundle] Found %d bundles: %s".format(bundles.size, bundles.toList.mkString(", ")))
     bundles.find(_.getVersion() == scalaCompilerBundleVersion).getOrElse {
       logger.warning("Couldnt find a match for %s in %s. Using default.".format(scalaCompilerBundleVersion, bundles.toList.mkString(", ")))
@@ -169,17 +184,13 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
     if (isScalaProject(project)) {
       Some(getScalaProject(project))
     } else {
+      logger.debug("`%s` is not a Scala Project.".format(project.getName()))
       None
     }
   }
 
-  def getScalaProject(input: IEditorInput): ScalaProject = input match {
-    case fei: IFileEditorInput => getScalaProject(fei.getFile.getProject)
-    case cfei: IClassFileEditorInput => getScalaProject(cfei.getClassFile.getJavaProject.getProject)
-    case _ => null
-  }
-
-  def isScalaProject(project: IJavaProject): Boolean = isScalaProject(project.getProject)
+  def isScalaProject(project: IJavaProject): Boolean = 
+    (project ne null) && isScalaProject(project.getProject)
 
   def isScalaProject(project: IProject): Boolean =
     try {
@@ -284,7 +295,7 @@ class ScalaPlugin extends AbstractUIPlugin with IResourceChangeListener with IEl
         case (project, srcs) =>
           asScalaProject(project) foreach { p =>
             if (project.isOpen && !projectsToReset(p))
-              getScalaProject(project) doWithPresentationCompiler (_.filesDeleted(srcs))
+              p doWithPresentationCompiler (_.filesDeleted(srcs))
           }
       }
     }

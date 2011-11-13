@@ -9,9 +9,10 @@
   <packaging>pom</packaging>
 
   <properties>
-    <sbt.version>0.11.3</sbt.version>
+    <sbt.version>0.11.4</sbt.version>
     <patch.level>p0002</patch.level>
     <encoding>UTF-8</encoding>
+    <scala.library.version>${scala.version}</scala.library.version>
   </properties>
 
   <modules>
@@ -29,17 +30,17 @@
       <dependency>
         <groupId>org.scala-lang</groupId>
         <artifactId>scala-library</artifactId>
-        <version>${scala.version}</version>
+        <version>${scala.library.version}</version>
       </dependency>
       <dependency>
         <groupId>org.scala-lang</groupId>
         <artifactId>scala-swing</artifactId>
-        <version>${scala.version}</version>
+        <version>${scala.library.version}</version>
       </dependency>
       <dependency>
         <groupId>org.scala-lang</groupId>
         <artifactId>scala-dbc</artifactId>
-        <version>${scala.version}</version>
+        <version>${scala.library.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

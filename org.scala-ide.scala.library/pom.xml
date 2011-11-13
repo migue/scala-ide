@@ -9,6 +9,7 @@
     <relativePath>../org.scala-ide.build-toolchain/pom.xml</relativePath>
   </parent>
   <artifactId>org.scala-ide.scala.library</artifactId>
+  <version>${scala.library.version}</version>
   <packaging>bundle</packaging>
   <dependencies>
     <dependency>
@@ -80,7 +81,7 @@
                 <artifactItem>
                   <groupId>org.scala-lang</groupId>
                   <artifactId>scala-library</artifactId>
-                  <version>${scala.version}</version>
+                  <version>${scala.library.version}</version>
                   <classifier>sources</classifier>
                   <type>jar</type>
                   <destFileName>scala-library-src.jar</destFileName>
@@ -88,7 +89,7 @@
                 <artifactItem>
                   <groupId>org.scala-lang</groupId>
                   <artifactId>scala-swing</artifactId>
-                  <version>${scala.version}</version>
+                  <version>${scala.library.version}</version>
                   <classifier>sources</classifier>
                   <type>jar</type>
                   <destFileName>scala-swing-src.jar</destFileName>
@@ -96,7 +97,7 @@
                 <artifactItem>
                   <groupId>org.scala-lang</groupId>
                   <artifactId>scala-dbc</artifactId>
-                  <version>${scala.version}</version>
+                  <version>${scala.library.version}</version>
                   <classifier>sources</classifier>
                   <type>jar</type>
                   <destFileName>scala-dbc-src.jar</destFileName>
