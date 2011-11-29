@@ -1,7 +1,7 @@
 package scala.tools.eclipse.codeanalysis
 
-import net.miginfocom.layout._
 import net.miginfocom.swt.MigLayout
+import net.miginfocom.layout._
 import org.eclipse.core.resources.IProject
 import org.eclipse.jdt.core.IJavaProject
 import org.eclipse.jdt.internal.ui.preferences.PreferencesMessages
@@ -76,6 +76,14 @@ class CodeAnalysisPreferencePage extends PropertyPage with IWorkbenchPreferenceP
       horizontalLine.setLayoutData(new CC().spanX(2).grow.wrap)
     }
     
+    val button = new Button(control, SWT.CHECK)
+    button.setText("Enable code analysis during compilation.")
+    button.setSelection(getPreferenceStore.getBoolean(generallyEnabledKey))
+    button.addSelectionListener { _: SelectionEvent =>
+      getPreferenceStore.setValue(generallyEnabledKey, button.getSelection)
+    }
+    button.setLayoutData(new CC().spanX(2).grow.wrap)
+    
     val table = new Table(control, SWT.CHECK | SWT.BORDER)
     
     if(isWorkbenchPage) {
@@ -94,7 +102,7 @@ class CodeAnalysisPreferencePage extends PropertyPage with IWorkbenchPreferenceP
     }
     
     val combos = CodeAnalysisExtensionPoint.extensions map {
-      case (CodeAnalysisExtensionPoint.ExtensionPointDescription(id, name, _, defaultSeverity), _) =>
+      case CodeAnalysisExtensionPoint.ExtensionPointDescription(id, name, _, defaultSeverity, _) =>
         
         val item = new TableItem(table, SWT.NONE)
         
@@ -136,7 +144,7 @@ class CodeAnalysisPreferencePage extends PropertyPage with IWorkbenchPreferenceP
         combo
     }
     
-    allEnableDisableControls ++= (table :: combos)
+    allEnableDisableControls ++= (button :: table :: combos)
 
     if (!isWorkbenchPage) {
       val enabled = getPreferenceStore.getBoolean(USE_PROJECT_SPECIFIC_SETTINGS_KEY)

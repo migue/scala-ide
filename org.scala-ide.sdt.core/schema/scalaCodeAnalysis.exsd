@@ -76,6 +76,13 @@
                </appInfo>
             </annotation>
          </attribute>
+         <attribute name="msgPattern" type="string" use="required">
+            <annotation>
+               <documentation>
+                  The message this analzyer will emit. This is needed to parse the generated messages in the IDE to e.g. adjust the severity. The string may contain placeholders (%s).
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 

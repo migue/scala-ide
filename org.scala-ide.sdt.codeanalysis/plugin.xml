@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+ <extension
+       point="org.scala-ide.sdt.core.scalaCodeAnalysis">
+    <analyzer
+          class="scala.tools.eclipse.codeanalysis.analyzers.UnusedImports"
+          id="org.scala-ide.sdt.codeanalysis.unusedimports"
+          name="Unused Imports"
+          msgPattern="Unused Import %s">
+    </analyzer>
+    <analyzer
+          class="scala.tools.eclipse.codeanalysis.analyzers.ClassFileNameMismatch"
+          id="org.scala-ide.sdt.codeanalysis.classfilenamemismatch"
+          name="Class/File-Name Mismatch"
+          msgPattern="Class- and filename mismatch">
+    </analyzer>
+    <analyzer
+          class="scala.tools.eclipse.codeanalysis.analyzers.PrintlnStatement"
+          id="org.scala-ide.sdt.codeanalysis.println"
+          name="Println Statement"
+          msgPattern="println called">
+    </analyzer>
+    <analyzer
+          class="scala.tools.eclipse.codeanalysis.analyzers.UnnecessaryPatternMatches"
+          id="org.scala-ide.sdt.codeanalysis.UnnecessaryPatternMatches"
+          name="Unnecessary Pattern Match"
+          msgPattern="Replace pattern match by call to `%s`">
+       <marker
+             id="org.scala-ide.sdt.codeanalysis.unnecessaryPatternMatch"
+             severity="0">
+       </marker>
+    </analyzer>
+ </extension>
+ <extension
+       id="unnecessaryPatternMatch"
+       name="Scala Code Analysis"
+       point="org.eclipse.core.resources.markers">
+    <super
+          type="org.scala-ide.sdt.core.scalaCodeAnalysisProblem">
+    </super>
+    <persistent
+          value="true">
+    </persistent>
+ </extension>
+ <extension
+       point="org.eclipse.ui.ide.markerResolution">
+    <markerResolutionGenerator
+          class="scala.tools.eclipse.codeanalysis.quickfixes.UnnecessaryPatternMatchMarkerResolutionGenerator"
+          markerType="org.scala-ide.sdt.codeanalysis.unnecessaryPatternMatch">
+    </markerResolutionGenerator>
+ </extension>
+</plugin>

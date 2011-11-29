@@ -67,11 +67,14 @@ Import-Package:
  com.ibm.icu.text;apply-aspects:=false;
  org.eclipse.swt.graphics;apply-aspects:=false
 Export-Package: 
+ net.miginfocom.layout,
+ net.miginfocom.swt,
  scala.tools.eclipse,
  scala.tools.eclipse.actions,
  scala.tools.eclipse.buildmanager,
  scala.tools.eclipse.buildmanager.refined,
  scala.tools.eclipse.buildmanager.sbtintegration,
+ scala.tools.eclipse.codeanalysis,
  scala.tools.eclipse.completion,
  scala.tools.eclipse.diagnostic,
  scala.tools.eclipse.formatter,

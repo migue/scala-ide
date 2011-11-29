@@ -20,8 +20,10 @@ class CodeAnalysisPreferenceInitializer extends AbstractPreferenceInitializer {
     Utils.tryExecute {
       val node = new DefaultScope().getNode(ScalaPlugin.plugin.pluginId)
       
+      node.put(generallyEnabledKey, "true")
+          
       CodeAnalysisExtensionPoint.extensions foreach {
-        case (CodeAnalysisExtensionPoint.ExtensionPointDescription(id, name, _, defaultSeverity), _) =>
+        case CodeAnalysisExtensionPoint.ExtensionPointDescription(id, name, _, defaultSeverity, _) =>
           node.put(enabledKey(id), "true")
           node.put(severityKey(id), String.valueOf(defaultSeverity))
       }

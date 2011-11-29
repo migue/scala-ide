@@ -15,6 +15,7 @@ import scala.util.matching.Regex
 import org.eclipse.jdt.core.ICompilationUnit
 import org.eclipse.jdt.core.IJavaModelMarker
 import org.eclipse.core.resources.IResource
+import scala.tools.eclipse.codeanalysis.CodeAnalysisPreferences
 
 /** Utility functions for setting up test projects.
  *  
@@ -58,8 +59,13 @@ object SDTTestUtils {
       project.create(null)
       project.open(null)
       JavaCore.create(project)
+      disableCodeAnalysis()
     }
     ScalaPlugin.plugin.getScalaProject(workspace.getRoot.getProject(name))
+  }
+  
+  def disableCodeAnalysis() {
+    ScalaPlugin.plugin.getPreferenceStore.setValue(CodeAnalysisPreferences.generallyEnabledKey, false)
   }
   
   /** Return all positions (offsets) of the given str in the given source file. 

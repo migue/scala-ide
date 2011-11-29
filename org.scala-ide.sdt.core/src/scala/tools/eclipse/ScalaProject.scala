@@ -36,6 +36,8 @@ import org.eclipse.core.runtime.Status
 import scala.tools.eclipse.util.Utils
 import org.eclipse.jdt.core.IJavaModelMarker
 import scala.tools.eclipse.util.FileUtils
+import org.eclipse.core.runtime.Platform
+import scala.tools.eclipse.codeanalysis.CodeAnalysisPreferences
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -564,6 +566,13 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
       } catch {
         case t: Throwable => logger.error("Unable to set setting '" + setting.name + "' to '" + value0 + "'", t)
       }
+    }
+    
+    if(CodeAnalysisPreferences.isGenerallyEnabledForProject(underlying)) {
+      val plugins = List("org.scala-refactoring.library", "org.scala-ide.sdt.codeanalysis")
+      val bundles = plugins map Platform.getBundle map Option.apply flatten
+      val jars    = bundles map (FileLocator.getBundleFile(_).getAbsolutePath) filter (_.endsWith("jar"))
+      jars foreach settings.plugin.appendToValue
     }
     
     // handle additional parameters

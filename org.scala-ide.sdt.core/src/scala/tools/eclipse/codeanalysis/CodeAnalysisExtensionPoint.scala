@@ -4,15 +4,15 @@
 
 package scala.tools.eclipse.codeanalysis
 
-import scala.tools.eclipse.SettingConverterUtil
-import org.eclipse.core.runtime.{CoreException, Platform}
-import scala.tools.eclipse.ScalaPlugin
-import scala.tools.nsc.Global
+import java.util.regex.Pattern
+
+import scala.tools.eclipse.util.EclipseResource
+import scala.tools.nsc.util.Position
+import scala.util.control.Exception.catching
+
 import org.eclipse.core.resources.IFile
-import org.eclipse.core.resources.IResource
 import org.eclipse.core.resources.IMarker
-import scala.util.control.Exception._
-import scala.tools.eclipse.properties.ScalaPluginSettings
+import org.eclipse.core.runtime.Platform
 
 object CodeAnalysisExtensionPoint {
   
@@ -20,37 +20,13 @@ object CodeAnalysisExtensionPoint {
   
   val MARKER_TYPE = "org.scala-ide.sdt.core.scalaCodeAnalysisProblem"
   
-  trait CompilationUnit {
-    val global: Global
-    val unit: global.CompilationUnit
-  }
-  
-  case class ExtensionPointDescription(id: String, name: String, markerId: String, severity: Int)
+  case class ExtensionPointDescription(id: String, name: String, markerId: String, severity: Int, msgPattern: String)
     
-  def apply(file: IFile, cu: CompilationUnit) = {
-        
-    deleteMarkers(file)
-
-    extensions map {
-      case (ExtensionPointDescription(analyzerId, _, markerType, _), extension) =>
-        
-        if(CodeAnalysisPreferences.isEnabledForProject(file.getProject, analyzerId)) {
-                  
-          lazy val severity = CodeAnalysisPreferences.getSeverityForProject(file.getProject, analyzerId)
-          
-          extension.analyze(cu) foreach {
-            case extension.Marker(msg, line) => 
-              addMarker(file, markerType, msg, line, severity)
-          }
-        }
-    }
-  }
-    
-  lazy val extensions: List[(ExtensionPointDescription, CodeAnalysisExtension)] = {
+  lazy val extensions: List[ExtensionPointDescription] = {
     
     val configs = Platform.getExtensionRegistry.getConfigurationElementsFor(PARTICIPANTS_ID).toList
 
-    configs flatMap { e =>
+    configs map { e =>
       
       val (markerType, severity) = e.getChildren.toList match {
         
@@ -67,22 +43,34 @@ object CodeAnalysisExtensionPoint {
           (MARKER_TYPE, IMarker.SEVERITY_WARNING)
       }
       
-      val analyzerName = e.getAttribute("name")
-      val analyzerId   = e.getAttribute("id")
+      val List(analyzerName, analyzerId, msgPattern) = List("name", "id", "msgPattern") map e.getAttribute
       
-      catching(classOf[CoreException]) opt e.createExecutableExtension("class") collect {
-        case instance: CodeAnalysisExtension => 
-          (ExtensionPointDescription(analyzerId, analyzerName, markerType, severity), instance)
-      }
+      ExtensionPointDescription(analyzerId, analyzerName, markerType, severity, msgPattern)
     }
   }
   
-  def isEnabled = {
-    ScalaPlugin.plugin.getPreferenceStore.getBoolean(SettingConverterUtil.convertNameToProperty(ScalaPluginSettings.codeAnalysis.name))
+  private lazy val extensionsMessageRegexes: List[(java.util.regex.Pattern, ExtensionPointDescription)] = {
+    extensions map { extension =>
+      (Pattern.compile(extension.msgPattern.replaceAll("%s", ".*")), extension)
+    }
   }
+  
+  def handleMessage(pos: Position, msg: String): Boolean = {
     
-  private def deleteMarkers(file: IFile) {
-    file.deleteMarkers(MARKER_TYPE, true, IResource.DEPTH_ZERO)
+    if (!pos.isDefined) return false
+    
+    extensionsMessageRegexes.find(_._1.matcher(msg).matches) exists {
+      case (_, ExtensionPointDescription(analyzerId, _, markerType, _, _)) =>
+        pos.source.file match {
+          case EclipseResource(file: IFile) =>
+            if(CodeAnalysisPreferences.isEnabledForProject(file.getProject, analyzerId)) {
+              val severity = CodeAnalysisPreferences.getSeverityForProject(file.getProject, analyzerId)            
+              addMarker(file, markerType, msg, pos.line, severity)
+            }
+        }
+        true
+      case _ => false
+    }
   }
   
   private def addMarker(file: IFile, markerType: String, message: String, lineNumber: Int, severity: Int) {

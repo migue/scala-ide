@@ -66,16 +66,6 @@ class EclipseRefinedBuildManager(project: ScalaProject, settings0: Settings)
           super.compileLate(file)
         }
       }
-
-    override def computeInternalPhases() {
-      super.computeInternalPhases
-
-      val codeAnalysis = new codeanalysis.CodeAnalysisComponent {
-        val global: EclipseBuildCompiler.this.type = EclipseBuildCompiler.this
-      }
-
-      addToPhasesSet(codeAnalysis, "code analysis hook for the IDE")
-    }
   }
 
   def build(addedOrUpdated: Set[IFile], removed: Set[IFile], submon: SubMonitor) {

@@ -5,17 +5,16 @@
 package scala.tools.eclipse
 package codeanalysis.analyzers
 
-import codeanalysis.{CodeAnalysisExtension, CodeAnalysisExtensionPoint}
-import tools.nsc.io.AbstractFile
-import tools.refactoring.implementations.EliminateMatch
+import scala.tools.eclipse.codeanalysis.CodeAnalyzer
+import scala.tools.eclipse.codeanalysis.GlobalCompilationUnit
 
-class PrintlnStatement extends CodeAnalysisExtension {
-  
-  def analyze(param: CodeAnalysisExtensionPoint.CompilationUnit) = {
-    
+class PrintlnStatement extends CodeAnalyzer {
+
+  def analyze(param: GlobalCompilationUnit, msg: String) = {
+
     import param._
     import global._
-    
+
     object Tm {
       val scala = newTermName("scala")
       val lang = newTermName("lang")
@@ -25,14 +24,14 @@ class PrintlnStatement extends CodeAnalysisExtension {
       val out = newTermName("out")
       val println = newTermName("println")
     }
-    
+
     object Ty {
       val java = newTypeName("java")
       val scala = newTypeName("scala")
     }
-    
+
     unit.body filter {
-      case Apply(Select(Select(Select(Select(This(Ty.java), Tm.lang), Tm.System), Tm.out), Tm.println), _) => 
+      case Apply(Select(Select(Select(Select(This(Ty.java), Tm.lang), Tm.System), Tm.out), Tm.println), _) =>
         true
       case Apply(Select(Select(This(Ty.scala), Tm.Predef), Tm.println), _) =>
         true
@@ -41,7 +40,7 @@ class PrintlnStatement extends CodeAnalysisExtension {
       case _ =>
         false
     } map { t =>
-      Marker("println called", t.pos.line)
+      Marker(msg, t.pos)
     }
   }
 }
