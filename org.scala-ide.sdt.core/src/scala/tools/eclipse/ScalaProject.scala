@@ -10,7 +10,7 @@ import scala.collection.mutable
 import java.io.File.pathSeparator
 import org.eclipse.core.resources.{ IContainer, IFile, IFolder, IMarker, IProject, IResource, IResourceProxy, IResourceProxyVisitor }
 import org.eclipse.core.runtime.{ FileLocator, IPath, IProgressMonitor, Path, SubMonitor }
-import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore }
+import org.eclipse.jdt.core.{ IClasspathEntry, IJavaProject, JavaCore, ICompilationUnit }
 import org.eclipse.jdt.core.compiler.IProblem
 import org.eclipse.jdt.internal.core.JavaProject
 import org.eclipse.jdt.internal.core.util.Util
@@ -33,6 +33,12 @@ import org.eclipse.jdt.core.IPackageFragmentRoot
 import org.eclipse.core.runtime.jobs.Job
 import org.eclipse.core.runtime.IStatus
 import org.eclipse.core.runtime.Status
+import scala.tools.eclipse.util.Utils
+import org.eclipse.jdt.core.IJavaModelMarker
+import scala.tools.eclipse.util.FileUtils
+import scala.tools.nsc.util.BatchSourceFile
+import java.io.InputStream
+import java.io.InputStreamReader
 
 trait BuildSuccessListener {
   def buildSuccessful(): Unit
@@ -119,7 +125,7 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
                "Add the Scala library to the classpath of project %s?") 
               .format(msg, underlying.getName))
           if (doAdd) {
-            plugin check {
+            Utils tryExecute {
               Nature.addScalaLibAndSave(underlying)
             }
           }
@@ -148,12 +154,25 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
       }.mkString("", "", "")
       mrk.setAttribute(IMarker.MESSAGE, string)
     }
+  
+  def settingsError(severity: Int, msg: String, monitor: IProgressMonitor) =
+    workspaceRunnableIn(underlying.getWorkspace, monitor) { m =>
+      val mrk = underlying.createMarker(plugin.settingProblemMarkerId)
+      mrk.setAttribute(IMarker.SEVERITY, severity)
+      mrk.setAttribute(IMarker.MESSAGE, msg)
+    }
 
-  def clearBuildErrors =
+  def clearBuildErrors() =
     workspaceRunnableIn(underlying.getWorkspace) { m =>
       underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_ZERO)
     }
 
+  def clearSettingsErrors() =
+    workspaceRunnableIn(underlying.getWorkspace) { m =>
+      underlying.deleteMarkers(plugin.settingProblemMarkerId, true, IResource.DEPTH_ZERO)
+    }
+
+  
   def externalDepends = underlying.getReferencedProjects
 
   lazy val javaProject = {
@@ -379,15 +398,23 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
     val markerJob= new Job("Update classpath error marker") {
       override def run(monitor: IProgressMonitor): IStatus = {
         if (underlying.isOpen()) { // cannot change markers on closed project
-          // clean the markers
-          underlying.deleteMarkers(plugin.problemMarkerId, false, IResource.DEPTH_ZERO)
+          // clean the classpath markers
+          underlying.deleteMarkers(plugin.classpathProblemMarkerId, false, IResource.DEPTH_ZERO)
           
           // add a new marker if needed
           severity match {
             case IMarker.SEVERITY_ERROR | IMarker.SEVERITY_WARNING =>
-              val marker= underlying.createMarker(plugin.problemMarkerId)
+              if (severity == IMarker.SEVERITY_ERROR) {
+                // delete all other Scala and Java error markers
+                underlying.deleteMarkers(plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+                underlying.deleteMarkers(IJavaModelMarker.JAVA_MODEL_PROBLEM_MARKER, true, IResource.DEPTH_INFINITE)
+              }
+              
+              // create the classpath problem marker
+              val marker= underlying.createMarker(plugin.classpathProblemMarkerId)
               marker.setAttribute(IMarker.MESSAGE, message)
               marker.setAttribute(IMarker.SEVERITY, severity)
+
             case _ =>
           }
         }
@@ -627,7 +654,8 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
 
   def buildManager = {
     if (buildManager0 == null) {
-      val settings = new Settings
+      val settings = new Settings(msg => settingsError(IMarker.SEVERITY_ERROR, msg, null))
+      clearSettingsErrors()
       initialize(settings, _ => true)
       // source path should be emtpy. The build manager decides what files get recompiled when.
       // if scalac finds a source file newer than its corresponding classfile, it will 'compileLate'
@@ -736,5 +764,48 @@ class ScalaProject private (val underlying: IProject) extends HasLogger {
   /** Shut down presentation compiler without scheduling a reconcile for open files. */
   def shutDownPresentationCompiler() {
     presentationCompiler.invalidate()
+  }
+  
+  /**
+   * Return the full content of the given file in a Char array.
+   * 
+   * Need to replace this with an utility method. I cannot believe it doesn't
+   * exist somewhere else.
+   */
+  private def readFully(file: IFile): Array[Char] = {
+    val reader= new InputStreamReader(file.getContents, file.getCharset())
+    val buf= new ListBuffer[Char]
+    var c= reader.read
+    while (c >= 0) {
+      buf+= c.asInstanceOf[Char]
+      c= reader.read
+    }
+    buf.toArray
+  }
+  
+  /**
+   * Tell the presentation compiler to refresh the given files,
+   * if they are not managed by the presentation compiler already.
+   */
+  def refreshChangedFiles(files: List[IFile]) {
+    // transform to batch source files
+    val abstractfiles= files.map(file => new BatchSourceFile(EclipseResource(file), readFully(file))) 
+      
+    withPresentationCompiler {compiler =>
+      import compiler._
+      // only the files not already managed should be refreshed
+      val notLoadedFiles= abstractfiles.filter(compiler.getUnitOf(_).isEmpty)
+            
+      notLoadedFiles.foreach(file => {
+        // call askParsedEntered to force the refresh without loading the file
+        val r = new Response[Tree]
+        compiler.askParsedEntered(file, false, r)
+        r.get.left
+      })
+      
+      // reconcile the opened editors if some files have been refreshed
+      if (notLoadedFiles.nonEmpty)
+        compiler.compilationUnits.foreach(_.scheduleReconcile())
+    }(Nil)
   }
 }

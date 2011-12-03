@@ -16,12 +16,15 @@ import org.junit.After
 import org.junit.Ignore
 import scala.tools.eclipse.EclipseUserSimulator
 import scala.tools.eclipse.ScalaProject
+import scala.tools.eclipse.properties.CompilerSettings
 
 object ClasspathTests extends TestProjectSetup("classpath")
 
 class ClasspathTests {
   
   import ClasspathTests._
+  val classpathMarkerId = ScalaPlugin.plugin.classpathProblemMarkerId
+
   
   val simulator = new EclipseUserSimulator
   
@@ -193,6 +196,59 @@ class ClasspathTests {
     checkMarkers(0, 1)
   }
   
+  def projectErrors(markerId: String*): List[String] = {
+    
+    val markers = markerId.flatMap(id => project.underlying.findMarkers(id, false, IResource.DEPTH_INFINITE))
+    
+    for (m <- markers.toList) yield m.getAttribute(IMarker.MESSAGE).toString
+  }
+  
+  @Test
+  def settingErrorsInProjectAreKeptAfterClasspathCheck() {
+    // illegal option
+    project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-Xi_dont_know")
+
+    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
+    project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+    
+    project.classpathHasChanged() // trick to make the check happen
+
+    val errors = projectErrors(ScalaPlugin.plugin.problemMarkerId, ScalaPlugin.plugin.settingProblemMarkerId)
+    
+    // on 2.8 an invalid setting is reported twice, so the total number of errors is 3 or 4
+    assertTrue("unexpected number of scala problems in project: " + errors, errors.length >= 3)
+    
+    // back to normal
+    project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "")
+
+    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
+    project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+    
+    project.classpathHasChanged() // trick to make the check happen
+
+    val errors1 = projectErrors(ScalaPlugin.plugin.problemMarkerId, ScalaPlugin.plugin.settingProblemMarkerId)
+    
+    assertEquals("unexpected number of scala problems in project: " + errors1, 2, errors1.length)
+  }
+
+  @Test
+  def buildErrorsInProjectAreKeptAfterClasspathCheck() {
+    // illegal option
+    project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "-P:unknown:error")
+
+    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
+    project.underlying.build(IncrementalProjectBuilder.FULL_BUILD, new NullProgressMonitor)
+    
+    project.classpathHasChanged() // trick to make the check happen
+
+    val errors = projectErrors(ScalaPlugin.plugin.problemMarkerId, ScalaPlugin.plugin.settingProblemMarkerId)
+    
+    assertEquals("unexpected number of scala problems in project: " + errors, 1, errors.length)
+    
+    project.storage.setValue(CompilerSettings.ADDITIONAL_PARAMS, "")
+  }
+
+  
   /**
    * check the code is not compiled if the classpath is not right (no error reported in scala files)
    */
@@ -205,21 +261,15 @@ class ClasspathTests {
     checkMarkers(0, 0)
     
     // two excepted code errors
-    var markers= project.underlying.findMarkers("org.scala-ide.sdt.core.problem", false, IResource.DEPTH_INFINITE)
+    var markers= project.underlying.findMarkers(ScalaPlugin.plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
     assertEquals("Unexpected number of scala problems in project", 2, markers.length)
     
     // switch to an invalid classpath
     setRawClasspathAndCheckMarkers(cleanRawClasspath, 0, 1)
     
-    project.underlying.build(IncrementalProjectBuilder.CLEAN_BUILD, new NullProgressMonitor)
-    project.underlying.build(IncrementalProjectBuilder.INCREMENTAL_BUILD, new NullProgressMonitor)
-    
-    // one error on the project
-    checkMarkers(0, 1)
-    
-    // no additional code errors
-    markers= project.underlying.findMarkers("org.scala-ide.sdt.core.problem", false, IResource.DEPTH_INFINITE)
-    assertEquals("Unexpected number of scala problems in project", 1, markers.length)
+    // no code errors visible anymore
+    markers= project.underlying.findMarkers(ScalaPlugin.plugin.problemMarkerId, true, IResource.DEPTH_INFINITE)
+    assertEquals("Unexpected number of scala problems in project", 0, markers.length)
   }
   
   /**
@@ -245,7 +295,8 @@ class ClasspathTests {
   }
   
   /**
-   * Check the number of errors and warnings attached to the project.
+   * Check the number of classpath errors and warnings attached to the project. It does *not* look for normal Scala problem markers,
+   * only for classpath markers.
    */
   private def checkMarkers(expectedNbOfWarningMarker: Int, expectedNbOfErrorMarker: Int, scalaProject: ScalaProject= project) {
     // try for 5 seconds, checking every 200ms
@@ -262,7 +313,7 @@ class ClasspathTests {
       // count the markers on the project
       nbOfWarningMarker= 0
       nbOfErrorMarker= 0
-      for (marker <- scalaProject.underlying.findMarkers("org.scala-ide.sdt.core.problem", false, IResource.DEPTH_ZERO))
+      for (marker <- scalaProject.underlying.findMarkers(classpathMarkerId, false, IResource.DEPTH_ZERO))
         marker.getAttribute(IMarker.SEVERITY, 0) match {
         case IMarker.SEVERITY_ERROR => nbOfErrorMarker+=1
         case IMarker.SEVERITY_WARNING => nbOfWarningMarker+=1
