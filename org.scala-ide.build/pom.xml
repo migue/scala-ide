@@ -18,7 +18,8 @@
     <maven.compiler.target>1.5</maven.compiler.target>
     <encoding>UTF-8</encoding>
     <repo.scala-ide>http://download.scala-ide.org</repo.scala-ide>
-    <repo.indigo>http://download.eclipse.org/eclipse/updates/3.7/</repo.indigo>
+    <repo.indigo>http://download.eclipse.org/releases/indigo/</repo.indigo>
+    <repo.ajdt>http://download.eclipse.org/tools/ajdt/37/dev/update</repo.ajdt>
   </properties>
 
   <prerequisites>
@@ -111,7 +112,7 @@
       <id>ajdt-indigo</id>
       <name>AJDT for Eclipse Indigo p2 repository</name>
       <layout>p2</layout>
-      <url>http://download.eclipse.org/tools/ajdt/37/update</url>
+      <url>${repo.ajdt}</url>
       <snapshots><enabled>false</enabled></snapshots>
     </repository>
     <repository>
