@@ -80,7 +80,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
   /**
    * Return completion proposals for mixed-in methods.
    */
-  def mixedInCompletions(unit: ICompilationUnit, invocationOffset: Int, selectionProvider: ISelectionProvider, monitor: IProgressMonitor): java.util.List[_] = {
+  def mixedInCompletions(unit: ICompilationUnit, invocationOffset: Int, selectionProvider: ISelectionProvider, monitor: IProgressMonitor): java.util.List[ICompletionProposal] = {
     // make sure the unit is consistent with the editor buffer
     unit.makeConsistent(monitor)
     // ask for the Java AST of the source
@@ -132,7 +132,7 @@ class ScalaJavaCompletionProposalComputer extends IJavaCompletionProposalCompute
 
     import scala.collection.JavaConversions._
 
-    completionProposals: java.util.List[_]
+    completionProposals: java.util.List[ICompletionProposal]
   }
 
 }
@@ -187,18 +187,6 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
    * Get the string to complete, and the referenced type form the 
    * found enclosing node
    */
-<<<<<<< HEAD
-  def mixedInCompletions(jc: JavaContentAssistInvocationContext): java.util.List[ICompletionProposal] = {
-    val coreContext = jc.getCoreContext()
-    val elem = if (coreContext.isExtended) coreContext.getEnclosingElement else jc.getCompilationUnit().getElementAt(jc.getInvocationOffset)
-    val doc = jc.getDocument
-    val region = doc.getLineInformationOfOffset(coreContext.getOffset)
-    val line = doc.get(region.getOffset, region.getLength)
-    
-    val prefix = line.lastIndexOf('.') match {
-      case -1 => line.trim
-      case pos => line.substring(pos + 1)
-=======
   override def endVisit(compilationUnit: CompilationUnit) {
     enclosingNode match {
       case block: Block =>
@@ -225,7 +213,6 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
         contextString = ""
         referencedTypeBinding = getDeclaringTypeBinding(expression)
       case _ => // test: oracleOutsideTypeDeclaration
->>>>>>> master
     }
   }
 
@@ -270,11 +257,6 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
       } else {
         getDeclaringTypeBinding(simpleName) // test: var13, bar8, bar10
       }
-<<<<<<< HEAD
-      completionProposals: java.util.List[ICompletionProposal]
-    } else
-      javaEmptyList()
-=======
     case qualifiedName: QualifiedName =>
       if (qualifiedName.getName() eq simpleName) {
         qualifiedName.getQualifier.resolveTypeBinding // test: var2, foo4
@@ -285,7 +267,6 @@ private class JavaASTVisitor(unit: ICompilationUnit, offset: Int) extends ASTVis
       getDeclaringTypeBinding(simpleName)
     case _ =>
       null
->>>>>>> master
   }
 
   /**
