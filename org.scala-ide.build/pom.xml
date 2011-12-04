@@ -18,7 +18,7 @@
     <maven.compiler.target>1.5</maven.compiler.target>
     <encoding>UTF-8</encoding>
     <repo.scala-ide>http://download.scala-ide.org</repo.scala-ide>
-    <repo.indigo>http://download.eclipse.org/releases/indigo/</repo.indigo>
+    <repo.indigo>http://download.eclipse.org/eclipse/updates/3.7/</repo.indigo>
   </properties>
 
   <prerequisites>
